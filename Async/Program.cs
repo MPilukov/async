@@ -31,9 +31,9 @@ namespace Async
 
             services.AddSingleton(config);
             services.AddSingleton<ISubscriber>(
-                str => new Subscriber(config.GetConnectionString("rabbitForTest")));
+                str => new Subscriber(config.GetConnectionString("rabbit")));
             services.AddTransient<ICache>(
-                str => new Cache(config.GetConnectionString("redisForTest")));
+                str => new Cache(config.GetConnectionString("redis")));
 
             RegisterMessageHandlers(services);
 
