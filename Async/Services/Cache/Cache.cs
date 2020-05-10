@@ -27,7 +27,7 @@ namespace Async.Services.Cache
                         isInitialized = "";
                     }
                 }
-            }            
+            }
         }
 
         public string Get(string key)

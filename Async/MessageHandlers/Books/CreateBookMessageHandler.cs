@@ -1,5 +1,7 @@
 ﻿using Async.Interfaces.Cache;
 using Async.Interfaces.Publish;
+using Async.Models.Books;
+using Newtonsoft.Json;
 using RabbitMq.Messages.Books;
 using System;
 using System.Threading.Tasks;
@@ -14,15 +16,21 @@ namespace Async.MessageHandlers.Books
             _cache = cache;
         }
 
-        public override Task Handle(CreateBookMessage message)
+        public override async Task Handle(CreateBookMessage message)
         {
             Console.WriteLine($"Пришло сообщение для создания книги : ({message.Id}, {message.Price}, {message.Title})");
 
-            _cache.Set($"Book_{message.Id}",
-                @"{""Id"":""" + message.Id + @""", ""Title"":""" 
-                + message.Title + @"""}");
+            var book = new Book
+            {
+                Id = message.Id,
+                Title = message.Title,
+                Price = message.Price,
+            };
 
-            return Task.FromResult(0);
+            var bookStr = JsonConvert.SerializeObject(book);
+
+            await _cache.SetAsync($"Book_{message.Id}", bookStr);
+            Console.WriteLine($"Сохранили информацию о книге : {message.Id}");
         }
     }
 }
