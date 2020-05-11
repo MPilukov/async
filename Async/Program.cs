@@ -1,6 +1,8 @@
 ﻿using Async.Interfaces.Cache;
+using Async.Interfaces.Logger;
 using Async.Interfaces.Publish;
 using Async.Services.Cache;
+using Async.Services.Logger;
 using Async.Services.Publish;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,37 +17,37 @@ namespace Async
 {
     class Program
     {
-        private static readonly Action<string> Log = Console.WriteLine; 
-
         static async Task Main(string[] args)
         {
             var services = ConfigureServices();
             if (services == null)
             {
-                Log("Не удалось зарегистрировать некоторые сервисы. Завершаем работу асинка.");
+                Console.WriteLine("Не удалось зарегистрировать некоторые сервисы. Завершаем работу асинка.");
                 return;
             }
-
             var serviceProvider = services.BuildServiceProvider();
-            if (!IsSuccessTestServices(serviceProvider))
+
+            var logger = serviceProvider.GetService<ILogger>();
+
+            if (!IsSuccessTestServices(serviceProvider, logger))
             {
-                Log("Не удалось протестировать работу некоторых сервисов. Завершаем работу асинка.");
+                logger.Error("Не удалось протестировать работу некоторых сервисов. Завершаем работу асинка.");
                 return;
             }
 
             try
             {
-                Log("Зависимости успешно зарегистрированы и протестированы. Запускаем асинк.");
+                logger.Info("Зависимости успешно зарегистрированы и протестированы. Запускаем асинк.");
                 await serviceProvider.GetService<Executer>().Run();
             }
             catch (Exception exc)
             {
-                Log("Не удалось запустить асинк. Завершаем работу.");
-                Log($"Exception : {exc}");
+                logger.Error("Не удалось запустить асинк. Завершаем работу.");
+                logger.Error($"Exception : {exc}");
             }
         }
 
-        private static bool IsSuccessTestServices(ServiceProvider serviceProvider)
+        private static bool IsSuccessTestServices(ServiceProvider serviceProvider, ILogger logger)
         {
             var maxRetryCounter = 5;
             var timeout = 5000;
@@ -53,13 +55,13 @@ namespace Async
             var subscriber = serviceProvider.GetService<ISubscriber>();
 
             if (!IsSuccessAction(() => subscriber.Subscribe(typeof(RabbitMq.Messages.TestMessage), m => { return Task.FromResult(0); }), 
-                maxRetryCounter, timeout, "Не удалось протестировать ISubscriber"))
+                maxRetryCounter, timeout, "Не удалось протестировать ISubscriber", logger))
             {
                 return false;
             }
 
             var cache = serviceProvider.GetService<ICache>();
-            if (!IsSuccessAction(() => cache.Get("TestValue"), maxRetryCounter, timeout, "Не удалось протестировать ICache"))
+            if (!IsSuccessAction(() => cache.Get("TestValue"), maxRetryCounter, timeout, "Не удалось протестировать ICache", logger))
             {
                 return false;
             }
@@ -67,7 +69,7 @@ namespace Async
             return true;
         }
 
-        private static bool IsSuccessAction(Action action, int maxRetryCounter, int timeout, string errorText)
+        private static bool IsSuccessAction(Action action, int maxRetryCounter, int timeout, string errorText, ILogger logger)
         {
             var retryCounter = 0;
 
@@ -85,7 +87,7 @@ namespace Async
                 }
                 catch (Exception exc)
                 {
-                    Log($"{errorText}. Попытка : {retryCounter} : {exc}");
+                    logger.Warn($"{errorText}. Попытка : {retryCounter} : {exc}");
                 }
 
                 retryCounter++;
@@ -93,7 +95,7 @@ namespace Async
 
             if (retryCounter == maxRetryCounter)
             {
-                Log(errorText);
+                logger.Warn(errorText);
                 return false;
             }
 
@@ -104,9 +106,13 @@ namespace Async
         {
             IServiceCollection services = new ServiceCollection();
             var config = GetConfiguration();
-
             services.AddSingleton(config);
-            services.AddSingleton<ISubscriber>(str => new Subscriber(config.GetConnectionString("rabbit")));
+            services.AddTransient<ILogger>(str => new ConsoleLogger());
+
+            var serviceProvider = services.BuildServiceProvider();
+            var logger = serviceProvider.GetService<ILogger>();
+
+            services.AddSingleton<ISubscriber>(str => new Subscriber(config.GetConnectionString("rabbit"), logger));
             services.AddTransient<ICache>(str => new Cache(config.GetConnectionString("redis")));
 
             RegisterMessageHandlers(services);

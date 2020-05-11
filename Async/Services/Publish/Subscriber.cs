@@ -3,18 +3,21 @@ using EasyNetQ;
 using System;
 using System.Threading.Tasks;
 using EasyNetQ.NonGeneric;
+using Async.Interfaces.Logger;
 
 namespace Async.Services.Publish
 {
     public class Subscriber : ISubscriber
     {
         private static IBus _bus;
+        private readonly ILogger _logger;
         private static volatile string isInitialized = null;
         private static readonly object initLock = new object();
 
-        public Subscriber(string connectionString)
+        public Subscriber(string connectionString, ILogger logger)
         {
             Init(connectionString);
+            _logger = logger;
         }
 
         private static void Init(string connectionString)
@@ -51,7 +54,7 @@ namespace Async.Services.Publish
                 }
                 catch (Exception exception)
                 {
-                    // ignored
+                    _logger.Error($"Ошибка при обработке сообщения : {msg} : {exception}");
                 }
             }
 
