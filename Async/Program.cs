@@ -25,9 +25,9 @@ namespace Async
                 Console.WriteLine("Не удалось зарегистрировать некоторые сервисы. Завершаем работу асинка.");
                 return;
             }
-            var serviceProvider = services.BuildServiceProvider();
 
-            var logger = serviceProvider.GetService<ILogger>();
+            var serviceProvider = services.BuildServiceProvider();
+            var logger = GetLogger(serviceProvider);
 
             if (!IsSuccessTestServices(serviceProvider, logger))
             {
@@ -47,6 +47,22 @@ namespace Async
             }
         }
 
+        private static ILogger GetLogger(ServiceProvider serviceProvider)
+        {
+            try
+            {
+                var logger = serviceProvider.GetService<ILogger>();
+                logger.Info("Получили ILogger");
+                return logger;
+            }
+            catch (Exception exc)
+            {
+                var logger = new ConsoleLogger();
+                logger.Error(exc.ToString());
+                return logger;
+            }
+        }
+
         private static bool IsSuccessTestServices(ServiceProvider serviceProvider, ILogger logger)
         {
             var maxRetryCounter = 5;
@@ -62,6 +78,13 @@ namespace Async
 
             var cache = serviceProvider.GetService<ICache>();
             if (!IsSuccessAction(() => cache.Get("TestValue"), maxRetryCounter, timeout, "Не удалось протестировать ICache", logger))
+            {
+                return false;
+            }
+
+            var publisher = serviceProvider.GetService<IPublisher>();
+            if (!IsSuccessAction(() => publisher.Publish(new RabbitMq.Messages.TestMessage { }),
+                maxRetryCounter, timeout, "Не удалось протестировать IPublisher", logger))
             {
                 return false;
             }
@@ -107,7 +130,12 @@ namespace Async
             IServiceCollection services = new ServiceCollection();
             var config = GetConfiguration();
             services.AddSingleton(config);
-            services.AddTransient<ILogger>(str => new ConsoleLogger());
+
+            var publisher = new Publisher(config.GetConnectionString("rabbit"));
+            services.AddSingleton<IPublisher>(str => publisher);
+
+            services.AddTransient<ILogElasticClient>(str => new LogElasticClient(config.GetConnectionString("elastic")));
+            services.AddTransient<ILogger>(str => new Logger(publisher));
 
             var serviceProvider = services.BuildServiceProvider();
             var logger = serviceProvider.GetService<ILogger>();
