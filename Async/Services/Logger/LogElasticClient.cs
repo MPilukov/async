@@ -10,22 +10,16 @@ namespace Async.Services.Logger
         private readonly IElasticClient _elasticClient;
         public LogElasticClient(string connectionSetting)
         {
-            var EsNode = new Uri(connectionSetting);
-            var EsConfig = new ConnectionSettings(EsNode);
-            _elasticClient = new ElasticClient(EsConfig);
+            var uri = new Uri(connectionSetting);
+            var settings = new ConnectionSettings(uri);
 
-            //var settings = new IndexSettings { NumberOfReplicas = 1, NumberOfShards = 2 };
-
-            //var indexConfig = new IndexState
-            //{
-            //    Settings = settings
-            //};
+            _elasticClient = new ElasticClient(settings);
         }
 
         public async Task Log(string index, DateTime time, string message, string level, string exception = null, 
             string request = null, string module = null)
         {
-            var data = new LogData
+            var data = new LogElasticData
             {
                 Time = time,
                 Message = message,
@@ -41,22 +35,9 @@ namespace Async.Services.Logger
             }
 
             var upsert = await _elasticClient
-                .UpdateAsync(DocumentPath<LogData>.Id(new Id(Guid.NewGuid())), x => x.Doc(data).Index(index).DocAsUpsert());
-        }
-
-        class LogData
-        {
-            public DateTime Time { get; set; }
-
-            public string Level { get; set; }
-
-            public string Module { get; set; }
-
-            public string Message { get; set; }
-
-            public string Request { get; set; }
-
-            public string Exception { get; set; }
+                .UpdateAsync(DocumentPath<LogElasticData>.Id(
+                        new Id(Guid.NewGuid())),
+                    x => x.Doc(data).Index(index).DocAsUpsert());
         }
     }
 }

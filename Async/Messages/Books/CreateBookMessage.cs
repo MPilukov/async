@@ -1,7 +1,7 @@
 ﻿using Async.Interfaces.Publish;
 using System;
 
-namespace RabbitMq.Messages.Books
+namespace Async.Messages.Books
 {
     public class CreateBookMessage : Message
     {

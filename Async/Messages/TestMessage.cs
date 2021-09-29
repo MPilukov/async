@@ -1,6 +1,6 @@
 ﻿using Async.Interfaces.Publish;
 
-namespace RabbitMq.Messages
+namespace Async.Messages
 {
     public class TestMessage : Message
     {

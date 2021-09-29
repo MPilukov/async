@@ -10,12 +10,12 @@ namespace Async.Services.Cache
         private static volatile string isInitialized = null;
         private static readonly object initLock = new object();
 
-        public Cache(string connetionString)
+        public Cache(string connectionString)
         {
-            Init(connetionString);
+            Init(connectionString);
         }
 
-        private void Init(string connetionString)
+        private void Init(string connectionString)
         {
             if (isInitialized == null)
             {
@@ -23,7 +23,7 @@ namespace Async.Services.Cache
                 {
                     if (isInitialized == null)
                     {
-                        _redis = ConnectionMultiplexer.Connect(connetionString);
+                        _redis = ConnectionMultiplexer.Connect(connectionString);
                         isInitialized = "";
                     }
                 }

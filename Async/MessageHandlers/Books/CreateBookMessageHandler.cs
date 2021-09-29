@@ -3,8 +3,8 @@ using Async.Interfaces.Logger;
 using Async.Interfaces.Publish;
 using Async.Models.Books;
 using Newtonsoft.Json;
-using RabbitMq.Messages.Books;
 using System.Threading.Tasks;
+using Async.Messages.Books;
 
 namespace Async.MessageHandlers.Books
 {
@@ -21,7 +21,7 @@ namespace Async.MessageHandlers.Books
 
         public override async Task Handle(CreateBookMessage message)
         {
-            _logger.Info($"Пришло сообщение для создания книги : ({message.Id}, {message.Price}, {message.Title})");
+            _logger.Info($"Start book create : ({message.Id}, {message.Price}, {message.Title})");
 
             var book = new Book
             {
@@ -33,7 +33,7 @@ namespace Async.MessageHandlers.Books
             var bookStr = JsonConvert.SerializeObject(book);
 
             await _cache.SetAsync($"Book_{message.Id}", bookStr);
-            _logger.Info($"Сохранили информацию о книге : {message.Id}");
+            _logger.Info($"Book saved : {message.Id}");
         }
     }
 }

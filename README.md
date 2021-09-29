@@ -1,2 +1,8 @@
-# async
-шаблон обработчика сообщений из шины на net core с примерами
+# Overview
+console application for handling messages from rabbitmq
+
+## Requirements
+- EasyNetQ
+- NEST
+- Newtonsoft
+- StackExchange.Redis

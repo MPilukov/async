@@ -54,7 +54,7 @@ namespace Async.Services.Publish
                 }
                 catch (Exception exception)
                 {
-                    _logger.Error($"Ошибка при обработке сообщения : {msg} : {exception}");
+                    _logger.Error($"Error in handling message : {msg} : {exception}");
                 }
             }
 
@@ -66,8 +66,6 @@ namespace Async.Services.Publish
                     configure => {
                         configure.WithPrefetchCount(20);
                     });
-
-            //_subscriptions.Add(subscription);
         }
     }
 }
