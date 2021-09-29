@@ -6,16 +6,8 @@ namespace Async.Services.Publish
     {
         public MyConventions(ITypeNameSerializer typeNameSerializer) : base(typeNameSerializer)
         {
-            ExchangeNamingConvention = type =>
-            {
-                return $"{type.FullName}, Exchange";
-            };
-
-            QueueNamingConvention = (type, id) =>
-            {
-                return $"{type.FullName}, Queue";
-            };
-
+            ExchangeNamingConvention = type => $"{type.FullName}, Exchange";
+            QueueNamingConvention = (type, id) => $"{type.FullName}, Queue";
             ErrorQueueNamingConvention = info => "ErrorQueue";
             ErrorExchangeNamingConvention = info => "BusErrorExchange_" + info.RoutingKey;
         }

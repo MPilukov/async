@@ -1,7 +1,7 @@
 ﻿using Async.Interfaces.Logger;
 using Async.Interfaces.Publish;
-using RabbitMq.Messages.Logs;
 using System;
+using Async.Messages.Logs;
 
 namespace Async.Services.Logger
 {
@@ -20,9 +20,6 @@ namespace Async.Services.Logger
             {
                 Level = "Info",
                 Message = message,
-                Exception = null,
-                Module = null,
-                Request = null,
                 Time = DateTime.UtcNow,
             });
         }
@@ -33,9 +30,6 @@ namespace Async.Services.Logger
             {
                 Level = "Warn",
                 Message = message,
-                Exception = null,
-                Module = null,
-                Request = null,
                 Time = DateTime.UtcNow,
             });
         }
@@ -46,14 +40,11 @@ namespace Async.Services.Logger
             {
                 Level = "Error",
                 Message = message,
-                Exception = null,
-                Module = null,
-                Request = null,
                 Time = DateTime.UtcNow,
             });
         }
 
-        public void Info(string message, Exception exception = null, string request = null, string module = null)
+        public void Info(string message, Exception exception, string request, string module)
         {
             _publisher.Publish(new LogMessage
             {
@@ -66,7 +57,7 @@ namespace Async.Services.Logger
             });
         }
 
-        public void Warn(string message, Exception exception = null, string request = null, string module = null)
+        public void Warn(string message, Exception exception, string request, string module)
         {
             _publisher.Publish(new LogMessage
             {
@@ -79,7 +70,7 @@ namespace Async.Services.Logger
             });
         }
 
-        public void Error(string message, Exception exception = null, string request = null, string module = null)
+        public void Error(string message, Exception exception, string request, string module)
         {
             _publisher.Publish(new LogMessage
             {
@@ -98,22 +89,16 @@ namespace Async.Services.Logger
             {
                 Level = level,
                 Message = message,
-                Exception = null,
-                Module = null,
-                Request = null,
                 Time = DateTime.UtcNow,
             });
         }
 
-        public void Log(string message, string level, Exception exception = null, string request = null, string module = null)
+        public void Log(string message, string level, Exception exception, string request, string module)
         {
             _publisher.Publish(new LogMessage
             {
                 Level = level,
                 Message = message,
-                Exception = null,
-                Module = null,
-                Request = null,
                 Time = DateTime.UtcNow,
             });
         }

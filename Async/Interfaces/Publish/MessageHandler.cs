@@ -1,5 +1,4 @@
-﻿using RabbitMq.Messages;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace Async.Interfaces.Publish
 {

@@ -12,17 +12,18 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Async.Messages;
 
 namespace Async
 {
     class Program
     {
-        static async Task Main(string[] args)
+        private static async Task Main(string[] args)
         {
             var services = ConfigureServices();
             if (services == null)
             {
-                Console.WriteLine("Не удалось зарегистрировать некоторые сервисы. Завершаем работу асинка.");
+                Console.WriteLine("Failed to register some services. Stop async");
                 return;
             }
 
@@ -31,28 +32,26 @@ namespace Async
 
             if (!IsSuccessTestServices(serviceProvider, logger))
             {
-                logger.Error("Не удалось протестировать работу некоторых сервисов. Завершаем работу асинка.");
+                logger.Error("Failed to test the work before start async. Stop async");
                 return;
             }
 
             try
             {
-                logger.Info("Зависимости успешно зарегистрированы и протестированы. Запускаем асинк.");
                 await serviceProvider.GetService<Executer>().Run();
             }
             catch (Exception exc)
             {
-                logger.Error("Не удалось запустить асинк. Завершаем работу.");
+                logger.Error("Failed to start async. Stop async");
                 logger.Error($"Exception : {exc}");
             }
         }
 
-        private static ILogger GetLogger(ServiceProvider serviceProvider)
+        private static ILogger GetLogger(IServiceProvider serviceProvider)
         {
             try
             {
                 var logger = serviceProvider.GetService<ILogger>();
-                logger.Info("Получили ILogger");
                 return logger;
             }
             catch (Exception exc)
@@ -63,28 +62,28 @@ namespace Async
             }
         }
 
-        private static bool IsSuccessTestServices(ServiceProvider serviceProvider, ILogger logger)
+        private static bool IsSuccessTestServices(IServiceProvider serviceProvider, ILogger logger)
         {
-            var maxRetryCounter = 5;
-            var timeout = 5000;
+            const int maxRetryCounter = 5;
+            const int timeout = 5000;
 
             var subscriber = serviceProvider.GetService<ISubscriber>();
 
-            if (!IsSuccessAction(() => subscriber.Subscribe(typeof(RabbitMq.Messages.TestMessage), m => { return Task.FromResult(0); }), 
-                maxRetryCounter, timeout, "Не удалось протестировать ISubscriber", logger))
+            if (!IsSuccessAction(() => subscriber.Subscribe(typeof(TestMessage), m => Task.FromResult(0)), 
+                maxRetryCounter, timeout, "Failed to test ISubscriber", logger))
             {
                 return false;
             }
 
             var cache = serviceProvider.GetService<ICache>();
-            if (!IsSuccessAction(() => cache.Get("TestValue"), maxRetryCounter, timeout, "Не удалось протестировать ICache", logger))
+            if (!IsSuccessAction(() => cache.Get("TestValue"), maxRetryCounter, timeout, "Failed to test ICache", logger))
             {
                 return false;
             }
 
             var publisher = serviceProvider.GetService<IPublisher>();
-            if (!IsSuccessAction(() => publisher.Publish(new RabbitMq.Messages.TestMessage { }),
-                maxRetryCounter, timeout, "Не удалось протестировать IPublisher", logger))
+            if (!IsSuccessAction(() => publisher.Publish(new TestMessage()),
+                maxRetryCounter, timeout, "Failed to test IPublisher", logger))
             {
                 return false;
             }
@@ -110,7 +109,7 @@ namespace Async
                 }
                 catch (Exception exc)
                 {
-                    logger.Warn($"{errorText}. Попытка : {retryCounter} : {exc}");
+                    logger.Warn($"{errorText}. Attempt : {retryCounter} : {exc}");
                 }
 
                 retryCounter++;

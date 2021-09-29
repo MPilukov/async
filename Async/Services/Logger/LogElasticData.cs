@@ -1,15 +1,19 @@
-﻿using Async.Interfaces.Publish;
-using System;
+﻿using System;
 
-namespace Async.Messages.Logs
+namespace Async.Services.Logger
 {
-    public class LogMessage : Message
+    public class LogElasticData
     {
         public DateTime Time { get; set; }
+
         public string Level { get; set; }
+
         public string Module { get; set; }
+
         public string Message { get; set; }
+
         public string Request { get; set; }
-        public Exception Exception { get; set; }
+
+        public string Exception { get; set; }
     }
 }
