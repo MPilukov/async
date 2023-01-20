@@ -4,7 +4,7 @@ using Async.Interfaces.Publish;
 using Async.Models.Books;
 using Newtonsoft.Json;
 using System.Threading.Tasks;
-using Async.Messages.Books;
+using Messages.Books;
 
 namespace Async.MessageHandlers.Books
 {
