@@ -1,7 +1,7 @@
 ﻿using Async.Interfaces.Publish;
 using System;
 
-namespace Async.Messages.Books
+namespace Messages.Books
 {
     public class CreateBookMessage : Message
     {
